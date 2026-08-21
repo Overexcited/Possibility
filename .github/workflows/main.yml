@@ -1,4 +1,4 @@
-name: Release OSS (APK)
+name: Build
 
 on:
   push:
@@ -27,9 +27,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust/.cargo/config.toml') }}
 
       - uses: actions/checkout@v7
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: 1.88.0
+
+      - name: Add Android Rust target
+        run: rustup target add aarch64-linux-android
 
       - name: Create Secrets file
         run: |
@@ -65,9 +69,10 @@ jobs:
           flutter_rust_bridge_codegen generate
           git checkout HEAD -- rust/src/frb_generated.rs
 
-      - uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r29
+      - name: Install Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;29.0.13113456"
 
       - uses: SimonMarquis/android-accept-licenses@v1
 
